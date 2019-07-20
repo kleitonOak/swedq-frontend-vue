@@ -1,6 +1,6 @@
 # app-vehicle-status
 
-## Project setup
+## Project setup.
 ```
 npm install
 ```
