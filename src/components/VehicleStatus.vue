@@ -1,73 +1,27 @@
 <template>
    <div id="vehicle-status-table" class="app">
+    <mdb-container>
       <mdb-datatable
         :data="data"
         striped
         bordered
         arrows
-        :display="3"
+        :display="10"
+        tfoot:false
         reactive
         :time="7000"
-        refresh
       />
+    </mdb-container>
   </div>
 </template>
 
 <script>
 import { mdbDatatable, mdbContainer } from 'mdbvue';
+import axios from 'axios'
 
-let rows = [
-              {
-                name: 'Tiger Nixon',
-                position: 'System Architect',
-                office: 'Edinburgh',
-                age: '61',
-                date: '2011/04/25',
-                salary: '$320'
-              },
-              {
-                name: 'Garrett Winters',
-                position: 'Accountant',
-                office: 'Tokyo',
-                age: '63',
-                date: '2011/07/25',
-                salary: '$170'
-              }
-            ];
+let customer_url = 'http://localhost:8082/api/v1/customer'
+let vehicle_url = 'http://localhost:8081/api/v1/vehicle'
 
-let columns = [
-              {
-                label: 'Name',
-                field: 'name',
-                sort: 'asc'
-              },
-              {
-                label: 'Position',
-                field: 'position',
-                sort: 'asc'
-              },
-              {
-                label: 'Office',
-                field: 'office',
-                sort: 'asc'
-              },
-              {
-                label: 'Age',
-                field: 'age',
-                sort: 'asc'
-              },
-              {
-                label: 'Start date',
-                field: 'date',
-                sort: 'asc'
-              },
-              {
-                label: 'Salary',
-                field: 'salary',
-                sort: 'asc'
-              }
-            ] 
-let dataDinanmic
 export default {
   name: 'VehicleStatus',
   props: {
@@ -79,18 +33,73 @@ export default {
   },
   data() {
       return {
-        columns: [],
-        rows: []
+        rows: [],
+        columns: []
       };
   },
   computed: {
       data() {
         return {
-          columns: columns,
-          rows: rows
+          columns: this.columns,
+          rows: this.rows
         };
       },
+  },
+  methods: {
+    customerRequest() {
+     return axios.get(customer_url)
+    },
+    vehicleRequest() {
+      return axios.get(vehicle_url)
+    },
+    filterData(dataArr, keys) {
+        let data = dataArr.map(entry => {
+          let filteredEntry = {};
+          keys.forEach(key => {
+            if (key in entry) {
+              filteredEntry[key] = entry[key];
+            }
+          });
+          return filteredEntry;
+        });
+        return data;
+    }
+  },
+  mounted(){
+    axios.all([
+        this.customerRequest(),
+        this.vehicleRequest()
+      ])
+    .then(axios.spread((customer_response, vehicle_response) => {
+          this.message = 'Request finished'
+          let jsonMerged = mergeJsonData(customer_response.data, vehicle_response.data);
+          let keys = ["name", "idVehicle", "status"];
+          let entries = this.filterData(jsonMerged, keys);
+          //columns
+          this.columns = keys.map(key => {
+            return {
+              label: key.toUpperCase(),
+              field: key,
+              sort: 'asc'
+            };
+          });
+          //rows
+          entries.map(entry => this.rows.push(entry));
+     })).catch(err => console.log(err));
   }
+}
+
+function mergeJsonData(customers, vehicles){
+  let dataMerge = []
+  for(const vehicle of vehicles) {
+    for(const customer of customers){
+       if(customer.id === vehicle.idCustomer){
+        const mergedTarget = Object.assign({},vehicle, customer);
+        dataMerge.push(mergedTarget)
+       }
+    }
+  }
+  return dataMerge
 }
 </script>
 
