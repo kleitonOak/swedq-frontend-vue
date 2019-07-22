@@ -1,15 +1,14 @@
 <template>
    <div id="vehicle-status-table" class="app">
+     <button @click="getVehicleData()">Refresh</button> 
     <mdb-container>
       <mdb-datatable
-        :data="data"
+        :data="list"
         striped
         bordered
         arrows
         :display="10"
-        tfoot:false
-        reactive
-        :time="7000"
+        :tfoot="false"
       />
     </mdb-container>
   </div>
@@ -38,7 +37,7 @@ export default {
       };
   },
   computed: {
-      data() {
+      list() {
         return {
           columns: this.columns,
           rows: this.rows
@@ -63,29 +62,33 @@ export default {
           return filteredEntry;
         });
         return data;
-    }
-  },
-  mounted(){
-    axios.all([
+    },
+    getVehicleData(){
+        axios.all([
         this.customerRequest(),
         this.vehicleRequest()
-      ])
-    .then(axios.spread((customer_response, vehicle_response) => {
-          this.message = 'Request finished'
-          let jsonMerged = mergeJsonData(customer_response.data, vehicle_response.data);
-          let keys = ["name", "idVehicle", "status"];
-          let entries = this.filterData(jsonMerged, keys);
-          //columns
-          this.columns = keys.map(key => {
-            return {
-              label: key.toUpperCase(),
-              field: key,
-              sort: 'asc'
-            };
-          });
-          //rows
-          entries.map(entry => this.rows.push(entry));
-     })).catch(err => console.log(err));
+          ])
+        .then(axios.spread((customer_response, vehicle_response) => {
+              this.message = 'Request finished'
+              let jsonMerged = mergeJsonData(customer_response.data, vehicle_response.data);
+              let keys = ["name", "idVehicle", "status"];
+              let entries = this.filterData(jsonMerged, keys);
+              //columns
+              this.columns = keys.map(key => {
+                return {
+                  label: key.toUpperCase(),
+                  field: key,
+                  sort: 'asc'
+                };
+              });
+              //rows
+              this.rows.length = 0
+              entries.map(entry => this.rows.push(entry));
+        })).catch(err => console.log(err));
+    }
+  },
+  async mounted(){
+    await this.getVehicleData()
   }
 }
 
