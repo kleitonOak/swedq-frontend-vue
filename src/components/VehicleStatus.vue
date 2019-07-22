@@ -1,21 +1,43 @@
 <template>
    <div id="vehicle-status-table" class="app">
-     <button @click="getVehicleData()">Refresh</button> 
-    <mdb-container>
-      <mdb-datatable
-        :data="list"
-        striped
-        bordered
-        arrows
-        :display="10"
-        :tfoot="false"
-      />
-    </mdb-container>
+    <div class="container">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active" href="#home" data-toggle="tab">Vehicle Status</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#simulate" data-toggle="tab">Simulate</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div class="tab-pane container active" id="home" style="margin-top:10px;">
+
+            <button @click="getVehicleData()" type="button" class="btn btn-primary">Refresh</button>
+
+            <mdb-container>
+              <mdb-datatable
+                :data="list"
+                striped
+                bordered
+                arrows
+                headerColor="elegant-color"
+                :display="10"
+                :tfoot="false"
+              />
+            </mdb-container>
+        </div>
+        <div class="tab-pane container fade" id="simulate" style="margin-top:10px;">
+            <VehicleStatusSimulate/>
+        </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { mdbDatatable, mdbContainer } from 'mdbvue';
+import VehicleStatusSimulate from './VehicleStatusSimulate.vue'
 import axios from 'axios'
 
 let customer_url = 'http://localhost:8082/api/v1/customer'
@@ -28,7 +50,8 @@ export default {
   },
   components: {
       mdbDatatable,
-      mdbContainer
+      mdbContainer,
+      VehicleStatusSimulate
   },
   data() {
       return {
